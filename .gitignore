@@ -1,0 +1,15 @@
+/artifacts
+bin/
+obj/
+.vs/
+.vscode/
+.dotnet-home/
+.nuget-packages/
+node_modules/
+dist/
+.angular/
+data/*.db
+data/*.db-shm
+data/*.db-wal
+*.user
+.testout

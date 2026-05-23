@@ -1,0 +1,51 @@
+services:
+  taskforge-web:
+    build:
+      context: .
+      dockerfile: src/TaskForge.Web/Dockerfile
+      args:
+        VITE_API_BASE_URL: http://localhost:8080
+    container_name: taskforge-web
+    depends_on:
+      - taskforge-api
+    environment:
+      VITE_API_BASE_URL: http://localhost:8080
+    ports:
+      - "5173:80"
+
+  taskforge-api:
+    build:
+      context: .
+      dockerfile: src/TaskForge.Api/Dockerfile
+    container_name: taskforge-api
+    depends_on:
+      taskforge-db:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__DefaultConnection: Server=taskforge-db,1433;Database=TaskForge;User Id=sa;Password=Your_strong_password123;TrustServerCertificate=True
+      Cors__AllowedOrigins__0: http://localhost:5173
+      Cors__AllowedOrigins__1: http://localhost:3000
+    ports:
+      - "8080:8080"
+
+  taskforge-db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: taskforge-db
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: Your_strong_password123
+    ports:
+      - "1433:1433"
+    volumes:
+      - taskforge-sql-data:/var/opt/mssql
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P Your_strong_password123 -C -Q \"SELECT 1\" || /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P Your_strong_password123 -Q \"SELECT 1\" || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+volumes:
+  taskforge-sql-data:
